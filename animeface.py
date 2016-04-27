@@ -7,7 +7,8 @@ import cv2 as cv
 
 class AnimeFaceDataset:
     def __init__(self):
-        self.data_dir_path = u"./images/"
+        self.data_dir_path = u"./images/mp4/UCF-101/"
+        #self.data_dir_path = u"./images_org/"
 
         self.data = None
         self.target = None
@@ -88,7 +89,8 @@ class AnimeFaceDataset:
             #    print 'target_name: ', target_name[i]
             #    self.index2name[self.target[i]] = target_name[i]
 
-        self.data = np.array(self.data, np.float32)
+        print 'self.data:',self.data
+        #self.data = np.array(self.data, np.float32)
         self.target = np.array(self.target, np.int32)
 
         self.dump_dataset()

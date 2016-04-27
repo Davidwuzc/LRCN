@@ -13,7 +13,7 @@ class CNN:
     def __init__(self, data, target, n_outputs, gpu=-1):
 
         self.model = alex.Alex(n_outputs)
-        self.model_name = 'alex_chainer_fc6'
+        self.model_name = 'alex'
 
         if gpu >= 0:
             self.model.to_gpu()

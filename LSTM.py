@@ -51,7 +51,7 @@ class LRCN:
     def __init__(self, data, target, length, n_outputs, gpu=-1):
 
         self.model = LSTM(length, n_outputs)
-        self.model_name = 'alex_chainer_fc6'
+        self.model_name = 'LSTM_Model'
 
         if gpu >= 0:
             self.model.to_gpu()
@@ -78,8 +78,11 @@ class LRCN:
         for i, motion in enumerate(self.x_feature):
             for j, image in enumerate(motion):
                 payload[0] = image
-                payload = np.array(payload)
-
+                payload = np.array(payload, np.float32)
+                print 'payload:',payload
+                print 'payload.dtype', payload.dtype
+                payload.astype(np.float32)
+                print 'payload.dtype', payload.dtype
                 featureImage[i].append(self.model.feature(payload, gpu=self.gpu).data)
                 #featureImage[i] = self.model.feature(motion, gpu=self.gpu).data
 
@@ -140,9 +143,9 @@ class LRCN:
                 epoch += 1
 
 
-    def dump_model(self,name):
+    def dump_model(self):
         self.model.to_cpu()
-        pickle.dump(self.model, open(self.model_name + name, 'wb'), -1)
+        pickle.dump(self.model, open(self.model_name, 'wb'), -1)
 
     def load_model(self):
         self.model = pickle.load(open(self.model_name,'rb'))

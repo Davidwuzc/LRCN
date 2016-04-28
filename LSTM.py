@@ -16,19 +16,19 @@ from numpy.random import *
 
 
 class LSTM(chainer.Chain):
-    def __init__(self, length, n_outputs, n_units=100, train=True):
+    def __init__(self, length, n_outputs, n_units=256, train=True):
         super(LSTM, self).__init__(
             l0=L.Linear(length, n_units),
             l1=L.LSTM(n_units, n_units),
-            l2=L.LSTM(n_units, n_units),
+            #l2=L.LSTM(n_units, n_units),
             l3=L.Linear(n_units,n_outputs)
         )
 
     def __forward(self, x):
         h0 = self.l0(x)
         h1 = self.l1(h0)
-        h2 = self.l2(h1)
-        h3 = self.l3(h2)
+        #h2 = self.l2(h1)
+        h3 = self.l3(h1)
         return h3
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
@@ -65,7 +65,6 @@ class LRCN:
         self.x_feature = data
         self.y_feature = target
 
-        # lossが発散したので学習率を変更できるように
         self.optimizer = optimizers.Adam()
         self.optimizer.setup(self.model)
 
@@ -74,10 +73,7 @@ class LRCN:
 
     def train_and_test(self, n_epoch=200, batchsize=100):
         epoch = 1
-        best_accuracy = 0
-        #answer = np.zeros(self.dim)
         answer = [0 for y in range(5)]
-
         for seq in range(n_epoch):
             sum_train_accuracy = 0
             sum_train_loss = 0
@@ -85,22 +81,15 @@ class LRCN:
             randomMotion = randint(self.dim)
             sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
             for i, image in enumerate(sequence):
-                #answer[randomMotion] = 1.
                 image2 = [[]]
                 image2[0] = image
-                #answer2 = []
-                #answer2.append(answer)
-                #print 'answer: ',answer
-                x = np.asarray(image2)   # i文字目を入力に
-                #t = np.asarray(answer2) # i+1文字目を正解に
-                #t = np.asarray(answer)
+                x = np.asarray(image2)
                 t = np.asarray([randomMotion])
 
-                loss, acc = self.model.forward(x, t)  # lossの計算
+                loss, acc = self.model.forward(x, t)
                 loss.backward()
                 self.optimizer.update
                 self.model.zerograds()
-                #answer = np.zeros(self.dim)
 
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
@@ -115,9 +104,9 @@ class LRCN:
                 for i, image in enumerate(sequence):
                     image2 = [[]]
                     image2[0] = image
-                    x = np.asarray(image2)   # i文字目を入力に
-                    t = np.asarray([randomMotion]) # i+1文字目を正解に
-                    loss, acc = self.model.forward(x, t)  # lossの計算
+                    x = np.asarray(image2)
+                    t = np.asarray([randomMotion])
+                    loss, acc = self.model.forward(x, t)
                     sum_test_loss += float(cuda.to_cpu(loss.data))
                     sum_test_accuracy += float(cuda.to_cpu(acc.data))
                 print '=================================='

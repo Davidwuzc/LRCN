@@ -104,30 +104,27 @@ class LRCN:
 
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
-                print 'loss', loss.data
-                print 'acc', acc.data
-                print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(self.y_feature), sum_train_accuracy/len(self.y_feature))
+            print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
 
-                # evaluation
+            # evaluation
+            if epoch%10 == 0:
                 sum_test_accuracy = 0
                 sum_test_loss = 0
-                for i in range(3):
-                    randomMotion = randint(self.dim)
-                    sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
-                    for i, image in enumerate(sequence):
-                        answer[randomMotion] = 1
-                        image2 = [[]]
-                        image2[0] = image
-                        x = np.asarray(image2)   # i文字目を入力に
-                        t = np.asarray([randomMotion]) # i+1文字目を正解に
-                        loss, acc = self.model.forward(x, t)  # lossの計算
-                        answer = np.zeros(self.dim)
-                        sum_test_loss += float(cuda.to_cpu(loss.data))
-                        sum_test_accuracy += float(cuda.to_cpu(acc.data))
+                randomMotion = randint(self.dim)
+                sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
+                for i, image in enumerate(sequence):
+                    image2 = [[]]
+                    image2[0] = image
+                    x = np.asarray(image2)   # i文字目を入力に
+                    t = np.asarray([randomMotion]) # i+1文字目を正解に
+                    loss, acc = self.model.forward(x, t)  # lossの計算
+                    sum_test_loss += float(cuda.to_cpu(loss.data))
+                    sum_test_accuracy += float(cuda.to_cpu(acc.data))
+                print '=================================='
+                print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(sequence), sum_test_accuracy/len(sequence))
+                print '=================================='
 
-                    print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(self.y_feature), sum_test_accuracy/len(self.y_feature))
-
-                epoch += 1
+            epoch += 1
 
 
     def dump_model(self):

@@ -46,12 +46,6 @@ class AnimeFaceDataset:
             self.load_dataset()
         if self.target is None:
             dir_list = self.get_dir_list(self.data_dir_path)
-            print 'dir_list', dir_list
-            for i, dir in enumerate(dir_list):
-                print 'dir: ', i, dir
-                dir_list2.append(self.get_dir_list2(self.data_dir_path + dir))
-                print 'in enumerate: ', dir_list2
-            print 'dir_list2', dir_list2
 
             ret = {}
             self.target = []
@@ -67,7 +61,7 @@ class AnimeFaceDataset:
                         continue
 
                     file_list = os.listdir(self.data_dir_path+dir_name+'/'+dir_name2)
-
+                    self.data[i].append([])
                     for file_name in file_list:
                         root, ext = os.path.splitext(file_name)
                         if ext == u'.jpg':
@@ -80,16 +74,8 @@ class AnimeFaceDataset:
                             image = image.transpose(2,0,1)
                             #image = image/255.
 
-                            self.data[i].append(image)
+                            self.data[i][j].append(image)
 
-            print 'self.target: ', self.target
-            print 'target_name: ', target_name
-            #for i in xrange(len(self.target)):
-            #    print 'self.target: ', self.target[i]
-            #    print 'target_name: ', target_name[i]
-            #    self.index2name[self.target[i]] = target_name[i]
-
-        print 'self.data:',self.data
         #self.data = np.array(self.data, np.float32)
         self.target = np.array(self.target, np.int32)
 

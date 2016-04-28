@@ -24,7 +24,8 @@ import numpy as np
 dataset = AnimeFaceDataset()
 dataset.load_data_target()
 data = dataset.data
-print 'data: ',data
+data = np.asarray(data)
+
 target = dataset.target
 print 'target: ',target
 n_outputs = dataset.get_n_types_target()
@@ -37,10 +38,11 @@ feature = cnn.feature()
 
 # LSTMによって動作の識別
 dim = len(feature)
-answer = np.zeros(dim)
-n_units = 1000
+print 'dim',dim
 # モデルの準備
 print 'length', len(feature[0][0][0])
+print 'length', len(feature[0][0])
+print 'length', len(feature[0])
 lrcn = LRCN(feature, target, len(feature[0][0][0]), dim, gpu=-1)
 lrcn.train_and_test()
 lrcn.dump_model()

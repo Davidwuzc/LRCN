@@ -8,12 +8,14 @@ from sklearn.cross_validation import train_test_split
 from chainer import cuda, Variable, FunctionSet, optimizers
 import chainer.functions as F
 import alex
+import os
 
 class CNN:
     def __init__(self, data, target, n_outputs, gpu=-1):
 
         self.model = alex.Alex(n_outputs)
         self.model_name = 'alex_chainer_fc6'
+        self.feature_dataset = 'feature_dataset'
 
         if gpu >= 0:
             self.model.to_gpu()
@@ -32,17 +34,31 @@ class CNN:
         return self.model.predict(self.x_test, self.y_test, gpu=self.gpu)
 
     def feature(self):
-        print len(self.x_feature)
-        featureImage = [[] for y in range(len(self.x_feature))]
-        payload = [[]]
-        for i, motion in enumerate(self.x_feature):
-            for j, image in enumerate(motion):
-                payload[0] = image
-                payload = np.array(payload, np.float32)
+        if os.path.exists(self.feature_dataset):
+            print 'os.path.exists'
+            featureImage = pickle.load(open(self.feature_dataset,'rb'))
+            return featureImage
+        else:
 
-                featureImage[i].append(self.model.feature(payload, gpu=self.gpu).data)
+            print len(self.x_feature)
+            #　全部やるのは時間的に面倒なので、５つだけでやる
+            #featureImage = [[] for y in range(len(self.x_feature))]
+            featureImage = [[] for y in range(5)]
+            payload = [[]]
+            for i, motion in enumerate(self.x_feature):
+                print 'motion NO.',i
+                if i >= 5:
+                    continue
+                for j, image in enumerate(motion):
+                    print 'len(image):',len(image)
+                    if len(image)==0:
+                        continue
+                    payload = np.array(image, np.float32)
 
-        return featureImage
+                    featureImage[i].append(self.model.feature(payload, gpu=self.gpu).data)
+
+            pickle.dump(featureImage, open(self.feature_dataset, 'wb'), -1)
+            return featureImage
 
     def train_and_test(self, n_epoch=20, batchsize=100):
 

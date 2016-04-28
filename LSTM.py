@@ -35,12 +35,13 @@ class LSTM(chainer.Chain):
         if gpu >= 0:
             x_data = cuda.to_gpu(x_data)
             y_data = cuda.to_gpu(y_data)
-        x, t = Variable(x_data), Variable(np.asarray([y_data]))
+        #x, t = Variable(x_data), Variable(np.asarray([y_data]))
+        x, t = Variable(x_data), Variable(np.asarray(y_data))
+
         y = self.__forward(x)
 
         y.data = y.data.astype(np.float32)
         t.data = t.data.astype(np.int32)
-
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
     def reset_state(self):
@@ -69,32 +70,13 @@ class LRCN:
         self.optimizer.setup(self.model)
 
     def predict(self):
-
         return self.model.predict(self.x_test, self.y_test, gpu=self.gpu)
-
-    def feature(self):
-        featureImage = [[] for y in range(self.x_feature.shape[0])]
-        payload = [[]]
-        for i, motion in enumerate(self.x_feature):
-            for j, image in enumerate(motion):
-                payload[0] = image
-                payload = np.array(payload, np.float32)
-                print 'payload:',payload
-                print 'payload.dtype', payload.dtype
-                payload.astype(np.float32)
-                print 'payload.dtype', payload.dtype
-                featureImage[i].append(self.model.feature(payload, gpu=self.gpu).data)
-                #featureImage[i] = self.model.feature(motion, gpu=self.gpu).data
-
-            #for j, image in enumerate(motion):
-            #    print 'image', image.shape
-            #    featureImage[i][j] = self.model.feature(image, gpu=self.gpu)
-        return featureImage
 
     def train_and_test(self, n_epoch=200, batchsize=100):
         epoch = 1
         best_accuracy = 0
-        answer = np.zeros(self.dim)
+        #answer = np.zeros(self.dim)
+        answer = [0 for y in range(5)]
 
         for seq in range(n_epoch):
             sum_train_accuracy = 0
@@ -103,17 +85,22 @@ class LRCN:
             randomMotion = randint(self.dim)
             sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
             for i, image in enumerate(sequence):
-                answer[randomMotion] = 1.
+                #answer[randomMotion] = 1.
                 image2 = [[]]
                 image2[0] = image
+                #answer2 = []
+                #answer2.append(answer)
+                #print 'answer: ',answer
                 x = np.asarray(image2)   # i文字目を入力に
-                t = np.asarray(randomMotion) # i+1文字目を正解に
+                #t = np.asarray(answer2) # i+1文字目を正解に
+                #t = np.asarray(answer)
+                t = np.asarray([randomMotion])
 
                 loss, acc = self.model.forward(x, t)  # lossの計算
                 loss.backward()
                 self.optimizer.update
                 self.model.zerograds()
-                answer = np.zeros(self.dim)
+                #answer = np.zeros(self.dim)
 
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
@@ -132,7 +119,7 @@ class LRCN:
                         image2 = [[]]
                         image2[0] = image
                         x = np.asarray(image2)   # i文字目を入力に
-                        t = np.asarray(randomMotion) # i+1文字目を正解に
+                        t = np.asarray([randomMotion]) # i+1文字目を正解に
                         loss, acc = self.model.forward(x, t)  # lossの計算
                         answer = np.zeros(self.dim)
                         sum_test_loss += float(cuda.to_cpu(loss.data))

@@ -20,15 +20,15 @@ class LSTM(chainer.Chain):
         super(LSTM, self).__init__(
             l0=L.Linear(length, n_units),
             l1=L.LSTM(n_units, n_units),
-            #l2=L.LSTM(n_units, n_units),
+            l2=L.LSTM(n_units, n_units),
             l3=L.Linear(n_units,n_outputs)
         )
 
     def __forward(self, x):
         h0 = self.l0(x)
         h1 = self.l1(h0)
-        #h2 = self.l2(h1)
-        h3 = self.l3(h1)
+        h2 = self.l2(h1)
+        h3 = self.l3(h2)
         return h3
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
@@ -43,6 +43,7 @@ class LSTM(chainer.Chain):
 
     def reset_state(self):
         self.l1.reset_state()
+        self.l2.reset_state()
 
 
 class LRCN:
@@ -91,6 +92,7 @@ class LRCN:
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
             print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
+            self.model.reset_state()
 
             # evaluation
             if epoch%10 == 0:
@@ -108,6 +110,8 @@ class LRCN:
                 print '=================================='
                 print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(sequence), sum_test_accuracy/len(sequence))
                 print '=================================='
+            
+            self.model.reset_state()
 
             epoch += 1
 

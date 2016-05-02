@@ -45,6 +45,14 @@ class LSTM(chainer.Chain):
         self.l1.reset_state()
         self.l2.reset_state()
 
+    def predict(self, x_data, gpu=-1):
+        if gpu >= 0:
+            x_data = cuda.to_gpu(x_data)
+        x = Variable(x_data)
+
+        y = self.__forward(x)
+
+        return F.softmax(y).data
 
 class LRCN:
     def __init__(self, data, target, length, n_outputs, gpu=-1):
@@ -71,13 +79,12 @@ class LRCN:
 
     def train_and_test(self, n_epoch=200, batchsize=100):
         epoch = 1
-        answer = [0 for y in range(5)]
         for seq in range(n_epoch):
             sum_train_accuracy = 0
             sum_train_loss = 0
-            print 'epoch: ',epoch
             randomMotion = randint(self.dim)
             sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
+            
             for i, image in enumerate(sequence):
 
                 x = image[np.newaxis, :]
@@ -91,11 +98,14 @@ class LRCN:
 
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
-            print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
+
+            if epoch%10 == 0:
+                print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
             self.model.reset_state()
 
             # evaluation
             if epoch%10 == 0:
+                print 'epoch:  ',epoch
                 sum_test_accuracy = 0
                 sum_test_loss = 0
                 randomMotion = randint(self.dim)
@@ -113,7 +123,20 @@ class LRCN:
             
             self.model.reset_state()
 
+            # prediction
+            if epoch%10 ==0:
+                randomMotion = randint(self.dim)
+                sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
+                prob = np.asarray([[0. for y in range(self.dim)]])
+                for i, image in enumerate(sequence):
+                    x = image[np.newaxis, :]
+                    result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu))
+                    prob = prob[0] + result[0]/len(sequence-1)
+                print 'Answer: ', randomMotion
+                print 'prob: ', prob
+
             epoch += 1
+
 
 
     def dump_model(self):

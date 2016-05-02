@@ -52,7 +52,9 @@ class CNN:
                 for j, image in enumerate(motion):
                     print 'len(image):',len(image)
                     if len(image)==0:
+			print 'skip this images'
                         continue
+		    print 'payloading...'
                     payload = np.array(image, np.float32)
 
                     featureImage[i].append(self.model.feature(payload, gpu=self.gpu).data)

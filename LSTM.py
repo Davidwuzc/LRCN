@@ -35,13 +35,10 @@ class LSTM(chainer.Chain):
         if gpu >= 0:
             x_data = cuda.to_gpu(x_data)
             y_data = cuda.to_gpu(y_data)
-        #x, t = Variable(x_data), Variable(np.asarray([y_data]))
-        x, t = Variable(x_data), Variable(np.asarray(y_data))
+        x, t = Variable(x_data), Variable(y_data)
 
         y = self.__forward(x)
 
-        y.data = y.data.astype(np.float32)
-        t.data = t.data.astype(np.int32)
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
     def reset_state(self):
@@ -81,12 +78,19 @@ class LRCN:
             randomMotion = randint(self.dim)
             sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
             for i, image in enumerate(sequence):
-                image2 = [[]]
-                image2[0] = image
-                x = np.asarray(image2)
-                t = np.asarray([randomMotion])
+                print 'image', image
 
-                loss, acc = self.model.forward(x, t)
+                x = image[np.newaxis, :]
+                print 'x:',x
+                #image2[0] = image
+                #x = [image]
+                #x = image2
+                t = np.asarray([randomMotion], dtype=np.int32)
+                print 'x:',x
+                #print 'x.dtype', x.dtype
+                print 't: ',t
+                #print 'x.shape',x.shape
+                loss, acc = self.model.forward(x, t, gpu=self.gpu)
                 loss.backward()
                 self.optimizer.update
                 self.model.zerograds()
@@ -102,11 +106,10 @@ class LRCN:
                 randomMotion = randint(self.dim)
                 sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
                 for i, image in enumerate(sequence):
-                    image2 = [[]]
-                    image2[0] = image
-                    x = np.asarray(image2)
-                    t = np.asarray([randomMotion])
-                    loss, acc = self.model.forward(x, t)
+
+                    x = image[np.newaxis, :]
+                    t = np.asarray([randomMotion], dtype=np.int32)
+                    loss, acc = self.model.forward(x, t, gpu=self.gpu)
                     sum_test_loss += float(cuda.to_cpu(loss.data))
                     sum_test_accuracy += float(cuda.to_cpu(acc.data))
                 print '=================================='

@@ -78,7 +78,6 @@ class LRCN:
             randomMotion = randint(self.dim)
             sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
             for i, image in enumerate(sequence):
-                print 'image', image
 
                 x = image[np.newaxis, :]
 

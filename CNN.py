@@ -50,7 +50,6 @@ class CNN:
                 if i >= 5:
                     continue
                 for j, image in enumerate(motion):
-                    print 'len(image):',len(image)
                     if len(image)==0:
 			print 'skip this images'
                         continue

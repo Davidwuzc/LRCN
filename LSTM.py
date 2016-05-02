@@ -20,15 +20,15 @@ class LSTM(chainer.Chain):
         super(LSTM, self).__init__(
             l0=L.Linear(length, n_units),
             l1=L.LSTM(n_units, n_units),
-            #l2=L.LSTM(n_units, n_outputs),
+            #l2=L.Linear(n_units, n_units),
             l3=L.Linear(n_units,n_outputs)
         )
 
-    def __forward(self, x):
-        h = F.dropout(self.l0(x), train=True)
-        h = F.dropout(self.l1(h), train=True)
-        #h = F.relu(self.l2(h))
-        h = F.dropout(self.l3(h), train=True)
+    def __forward(self, x, train=True):
+        h = F.dropout(F.relu(self.l0(x)), train=train)
+        h = self.l1(h)
+        #h = self.l2(h)
+        h = F.dropout(F.relu(self.l3(h)), train=train)
         return h
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
@@ -37,7 +37,7 @@ class LSTM(chainer.Chain):
             y_data = cuda.to_gpu(y_data)
         x, t = Variable(x_data), Variable(y_data)
 
-        y = self.__forward(x)
+        y = self.__forward(x, train=train)
 
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
@@ -45,12 +45,12 @@ class LSTM(chainer.Chain):
         self.l1.reset_state()
         #self.l2.reset_state()
 
-    def predict(self, x_data, gpu=-1):
+    def predict(self, x_data, gpu=-1, train=False):
         if gpu >= 0:
             x_data = cuda.to_gpu(x_data)
         x = Variable(x_data)
 
-        y = self.__forward(x)
+        y = self.__forward(x, train=train)
 
         return F.softmax(y).data
 
@@ -96,13 +96,12 @@ class LRCN:
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
 
-            if epoch%10 == 0:
+            if epoch%100 == 0:
                 print '=================================='
                 print 'epoch:  ',epoch
                 print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
 
             # evaluation
-                self.model.reset_state()
                 sum_test_accuracy = 0
                 sum_test_loss = 0
                 randomMotion = randint(self.dim)
@@ -111,21 +110,20 @@ class LRCN:
 
                     x = image[np.newaxis, :]
                     t = np.asarray([randomMotion], dtype=np.int32)
-                    loss, acc = self.model.forward(x, t, gpu=self.gpu)
+                    loss, acc = self.model.forward(x, t, gpu=self.gpu, train=True)
                     sum_test_loss += float(cuda.to_cpu(loss.data))
                     sum_test_accuracy += float(cuda.to_cpu(acc.data))
                 print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(sequence), sum_test_accuracy/len(sequence))
             
 
             # prediction
-            if epoch%10 ==0:
-                self.model.reset_state()
+            if epoch%100 ==0:
                 randomMotion = randint(self.dim)
                 sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
                 prob = np.asarray([[0. for y in range(self.dim)]])
                 for i, image in enumerate(sequence):
                     x = image[np.newaxis, :]
-                    result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu))
+                    result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu, train=True))
                     prob = prob[0] + result[0]/len(sequence)
                 print 'Answer:', randomMotion, ' Pred:', np.argmax(prob), ',',np.max(prob)*100,'%'
                 print 'prob: ', prob

@@ -3,3 +3,10 @@ alex_chainer_fc6
 bvlc_alexnet.caffemodel
 dataset
 feature_dataset
+*.pyc
+images_org/
+mp4
+UCF-101
+alex
+alex_chainer
+LSTM_Model

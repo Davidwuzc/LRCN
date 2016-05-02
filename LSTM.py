@@ -98,10 +98,12 @@ class LRCN:
 
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))
+            
+            self.model.reset_state()
 
             if epoch%10 == 0:
+                print '=================================='
                 print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
-            self.model.reset_state()
 
             # evaluation
             if epoch%10 == 0:
@@ -117,7 +119,6 @@ class LRCN:
                     loss, acc = self.model.forward(x, t, gpu=self.gpu)
                     sum_test_loss += float(cuda.to_cpu(loss.data))
                     sum_test_accuracy += float(cuda.to_cpu(acc.data))
-                print '=================================='
                 print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(sequence), sum_test_accuracy/len(sequence))
                 print '=================================='
             
@@ -132,7 +133,7 @@ class LRCN:
                     x = image[np.newaxis, :]
                     result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu))
                     prob = prob[0] + result[0]/len(sequence-1)
-                print 'Answer: ', randomMotion
+                print 'Answer:', randomMotion, ' Pred:', np.argmax(prob), ',',np.max(prob)*100,'%'
                 print 'prob: ', prob
 
             epoch += 1

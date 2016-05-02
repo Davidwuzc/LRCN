@@ -27,9 +27,7 @@ data = dataset.data
 data = np.asarray(data)
 
 target = dataset.target
-print 'target: ',target
 n_outputs = dataset.get_n_types_target()
-print 'n_outputs: ',n_outputs
 
 # CNNによって特徴量を取り出したデータセットを作る
 cnn = CNN(data=data, target=target, gpu=-1, n_outputs=n_outputs)
@@ -38,11 +36,8 @@ feature = cnn.feature()
 
 # LSTMによって動作の識別
 dim = len(feature)
-print 'dim',dim
+
 # モデルの準備
-print 'length', len(feature[0][0][0])
-print 'length', len(feature[0][0])
-print 'length', len(feature[0])
 lrcn = LRCN(feature, target, len(feature[0][0][0]), dim, gpu=-1)
 lrcn.train_and_test()
 lrcn.dump_model()

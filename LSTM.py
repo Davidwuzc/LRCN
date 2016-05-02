@@ -42,6 +42,8 @@ class LSTM(chainer.Chain):
 
         y.data = y.data.astype(np.float32)
         t.data = t.data.astype(np.int32)
+        print 'y.data',y.data
+        print 't.data',t.data
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
     def reset_state(self):
@@ -82,10 +84,14 @@ class LRCN:
             sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
             for i, image in enumerate(sequence):
                 image2 = [[]]
+
                 image2[0] = image
+                print 'image:',image
+                print 'image2:',image2
                 x = np.asarray(image2)
                 t = np.asarray([randomMotion])
-
+                print 'x',x
+                print 't',t
                 loss, acc = self.model.forward(x, t)
                 loss.backward()
                 self.optimizer.update

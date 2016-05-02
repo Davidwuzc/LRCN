@@ -25,11 +25,11 @@ class LSTM(chainer.Chain):
         )
 
     def __forward(self, x):
-        h0 = self.l0(x)
-        h1 = self.l1(h0)
-        #h2 = self.l2(h1)
-        h3 = self.l3(h1)
-        return h3
+        h = F.dropout(self.l0(x), train=True)
+        h = F.dropout(self.l1(h), train=True)
+        #h = F.relu(self.l2(h))
+        h = F.dropout(self.l3(h), train=True)
+        return h
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
         if gpu >= 0:

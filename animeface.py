@@ -66,7 +66,6 @@ class AnimeFaceDataset:
                         root, ext = os.path.splitext(file_name)
                         if ext == u'.jpg':
                             abs_name = self.data_dir_path+dir_name+'/'+dir_name2+'/'+file_name
-                            print 'i, j', i,':',j
                             self.target.append(i)
                             target_name.append(str(dir_name))
                             image = cv.imread(abs_name)

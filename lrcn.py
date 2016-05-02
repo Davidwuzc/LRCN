@@ -39,5 +39,5 @@ dim = len(feature)
 
 # モデルの準備
 lrcn = LRCN(feature, target, len(feature[0][0][0]), dim, gpu=0)
-lrcn.train_and_test()
+lrcn.train_and_test(n_epoch=10000000)
 lrcn.dump_model()

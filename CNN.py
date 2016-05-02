@@ -42,18 +42,22 @@ class CNN:
 
             print len(self.x_feature)
             #　全部やるのは時間的に面倒なので、５つだけでやる
+            #Motions = len(self.x_feature)
+            Motions = 5
             #featureImage = [[] for y in range(len(self.x_feature))]
-            featureImage = [[] for y in range(5)]
+            featureImage = [[] for y in range(Motions)]
             payload = [[]]
             for i, motion in enumerate(self.x_feature):
                 print 'motion NO.',i
-                if i >= 5:
+                #if i >= len(self.x_feature):
+                if i >= Motions:
+                    print 'skip this motion'
                     continue
                 for j, image in enumerate(motion):
                     if len(image)==0:
-			print 'skip this images'
+                        print 'skip'
                         continue
-		    print 'payloading...'
+                    print 'payloading...'
                     payload = np.array(image, np.float32)
 
                     featureImage[i].append(self.model.feature(payload, gpu=self.gpu).data)
@@ -116,15 +120,3 @@ class CNN:
             self.model.to_gpu()
         self.optimizer.setup(self.model)
 
-    def test(self,gpu=0):
-        sum_test_loss = 0
-        sum_test_accuracy = 0
-        x_batch=self.x_test
-        y_batch=self.y_test
-        loss, acc = self.model.forward(x_batch, y_batch, train=True, gpu=self.gpu)
-        real_batchsize=len(x_batch)
-        sum_test_loss += float(cuda.to_cpu(loss.data)) * real_batchsize
-        sum_test_accuracy += float(cuda.to_cpu(acc.data)) * real_batchsize
-        print 'test mean loss={}, accuracy={}'.format(sum_test_loss/self.n_test, sum_test_accuracy/self.n_test)
-        print(real_batchsize)
-        print(sum_test_accuracy)

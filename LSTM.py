@@ -91,7 +91,7 @@ class LRCN:
                 self.optimizer.zero_grads()
                 loss, acc = self.model.forward(x, t, gpu=self.gpu)
                 loss.backward()
-                self.optimizer.update
+                self.optimizer.update()
 
                 sum_train_loss += float(cuda.to_cpu(loss.data))
                 sum_train_accuracy += float(cuda.to_cpu(acc.data))

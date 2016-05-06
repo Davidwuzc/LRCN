@@ -18,17 +18,17 @@ from numpy.random import *
 class LSTM(chainer.Chain):
     def __init__(self, length, n_outputs, n_units=256, train=True):
         super(LSTM, self).__init__(
-            l0=L.Linear(length, n_units),
-            l1=L.LSTM(n_units, n_units),
+            #l0=L.Linear(length, n_units),
+            l1=L.LSTM(length, n_units),
             #l2=L.Linear(n_units, n_units),
             l3=L.Linear(n_units,n_outputs)
         )
 
     def __forward(self, x, train=True):
-        h = F.dropout(F.relu(self.l0(x)), train=train)
-        h = self.l1(h)
+        #h = self.l0(x)
+        h = self.l1(F.dropout(x, train=train))
         #h = self.l2(h)
-        h = F.dropout(F.relu(self.l3(h)), train=train)
+        h = self.l3(F.dropout(h, train=train))
         return h
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
@@ -71,7 +71,7 @@ class LRCN:
         self.x_feature = data
         self.y_feature = target
 
-        self.optimizer = optimizers.RMSpropGraves()
+        self.optimizer = optimizers.Adam()
         self.optimizer.setup(self.model)
 
     def predict(self):
@@ -120,13 +120,14 @@ class LRCN:
             if epoch%100 ==0:
                 randomMotion = randint(self.dim)
                 sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
-                prob = np.asarray([[0. for y in range(self.dim)]])
+                #prob = np.asarray([[0. for y in range(self.dim)]])
                 for i, image in enumerate(sequence):
                     x = image[np.newaxis, :]
                     result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu, train=True))
-                    prob = prob[0] + result[0]/len(sequence)
-                print 'Answer:', randomMotion, ' Pred:', np.argmax(prob), ',',np.max(prob)*100,'%'
-                print 'prob: ', prob
+                    #prob = prob[0] + result[0]/len(sequence)
+                print 'Answer:', randomMotion, ' Pred:', np.argmax(result[0]), ',',np.max(result[0])*100,'%'
+                #print 'prob: ', prob
+                print 'softmax', result[0]
                 print '=================================='
 
             epoch += 1

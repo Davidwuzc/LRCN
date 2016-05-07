@@ -17,10 +17,11 @@ from chainer import cuda, Variable, FunctionSet, optimizers
 from numpy.random import *
 import six
 import numpy as np
+import csv
 
-
-n_epoch = 10000
 gpu = 0
+n_epoch = 10000
+model_name = "LRCN_Classifier_10000"
 # データセットを作る
 #dataset = AnimeFaceDataset()
 #dataset.load_data_target()
@@ -87,6 +88,8 @@ if gpu >= 0:
 	model.to_gpu()
 optimizer = optimizers.Adam()
 optimizer.setup(lstm)
+loss_log = []
+win_log = []
 
 epoch = 1
 win = 0
@@ -108,7 +111,7 @@ for seq in range(n_epoch):
 		loss = model(Variable(x), Variable(t))
 		loss.backward()
 		optimizer.update()
-
+		loss_log.append(loss)
 		sum_train_loss += float(cuda.to_cpu(loss.data))
 		sum_train_accuracy += float(cuda.to_cpu(model.accuracy.data))
 
@@ -131,8 +134,22 @@ for seq in range(n_epoch):
 			payload += data[0]/len(sequence)
 		if randomMotion == np.argmax(payload):
 			win += 1
+			win_log.append(1)
+		else:
+			win_log.append(0)
 		print 'Answer:', randomMotion, ' Pred:', np.argmax(payload), ',',np.max(payload)*100,'%'
-		print 'Distribution', payload
+		print 'Softmax', payload
 		print 'Total winning ratio: ', win,'/',epoch/5
 		print '=================================='
 	epoch += 1
+
+f = open('loss_log.csv', 'w')
+writer = csv.writer(f, lineterminator='\n')
+writer.writerow(loss_log)
+f.close()
+f = open('win_log.csv', 'w')
+writer = csv.writer(f, lineterminator='\n')
+writer.writerow(win_log)
+f.close()
+model.to_cpu()
+pickle.dump(model, open(model_name, 'wb'), -1)

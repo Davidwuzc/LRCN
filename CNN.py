@@ -43,7 +43,7 @@ class CNN:
             print len(self.x_feature)
             #　全部やるのは時間的に面倒なので、５つだけでやる
             #Motions = len(self.x_feature)
-            Motions = 5
+            Motions = 2
             #featureImage = [[] for y in range(len(self.x_feature))]
             featureImage = [[] for y in range(Motions)]
             payload = [[]]

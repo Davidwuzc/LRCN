@@ -22,17 +22,17 @@ import numpy as np
 n_epoch = 10000
 gpu = 0
 # データセットを作る
-dataset = AnimeFaceDataset()
-dataset.load_data_target()
-data = dataset.data
-data = np.asarray(data)
+#dataset = AnimeFaceDataset()
+#dataset.load_data_target()
+#data = dataset.data
+#data = np.asarray(data)
 
-target = dataset.target
-n_outputs = dataset.get_n_types_target()
-n_outputs = 2
+#target = dataset.target
+#n_outputs = dataset.get_n_types_target()
+n_outputs = 5
 # CNNによって特徴量を取り出したデータセットを作る
-cnn = CNN(data=data, target=target, gpu=0, n_outputs=n_outputs)
-cnn.load_model()
+cnn = CNN(data=[], target=[], gpu=0, n_outputs=n_outputs)
+#cnn.load_model()
 feature = cnn.feature()
 dim = len(feature)
 length = len(feature[0][0][0])
@@ -76,16 +76,15 @@ class LSTM(chainer.Chain):
         #self.l2.reset_state()
 
     def predict(self, x_data, gpu=-1, train=False):
-        if gpu >= 0:
-            x_data = cuda.to_gpu(x_data)
-        x = Variable(x_data)
 
-        y = self.__forward(x, train=train)
+        y = self.__forward(x_data, train=train)
 
         return F.softmax(y).data
 
 lstm = LSTM(length, dim)
 model = L.Classifier(lstm)
+if gpu >= 0:
+	model.to_gpu()
 optimizer = optimizers.Adam()
 optimizer.setup(lstm)
 
@@ -103,19 +102,19 @@ for seq in range(n_epoch):
 		#x = cuda.cupy.array(image[cuda.cupy.newaxis, :])
 		x = np.asarray([image], dtype=np.float32)
 		t = np.asarray([randomMotion], dtype=np.int32)
-		#if gpu >= 0:
-		#	x = cuda.to_gpu(x)
-		#	t = cuda.to_gpu(t)
+		if gpu >= 0:
+			x = cuda.to_gpu(x)
+			t = cuda.to_gpu(t)
 		loss = model(Variable(x), Variable(t))
 		loss.backward()
 		optimizer.update()
 
 		sum_train_loss += float(cuda.to_cpu(loss.data))
 		sum_train_accuracy += float(cuda.to_cpu(model.accuracy.data))
-        #sum_train_accuracy += float(cuda.to_cpu(acc.data))
+
 	print '=================================='
 	print 'epoch:  ',epoch
-	print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence)), format(sum_train_accuracy/len(sequence))
+	print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
 	print '==================================='
 	
 	if epoch % 5 == 0:
@@ -125,7 +124,10 @@ for seq in range(n_epoch):
 		payload = np.zeros(dim)
 		for i, image in enumerate(sequence):
 			x = np.asarray([image], dtype=np.float32)
-			data = lstm(Variable(x)).data
+			if gpu >= 0:
+				x = cuda.to_gpu(x)
+				t = cuda.to_gpu(t)
+			data = cuda.to_cpu(lstm.predict(Variable(x), gpu=gpu))
 			payload += data[0]/len(sequence)
 		if randomMotion == np.argmax(payload):
 			win += 1

@@ -43,21 +43,21 @@ class LSTM(chainer.Chain):
         super(LSTM, self).__init__(
             l0=L.Linear(length, n_units),
             l1=L.LSTM(n_units, n_units),
-            #l2=L.LSTM(n_units, n_units),
+            l2=L.LSTM(n_units, n_units),
             l3=L.Linear(n_units,n_outputs)
         )
 
     def __call__(self, x):
         h = self.l0(x)
         h = self.l1(F.dropout(F.relu(h), train=True))
-        #h = self.l2(F.dropout(h, train=train))
+        h = self.l2(F.dropout(F.relu(h), train=True))
         h = self.l3(F.dropout(F.relu(h), train=True))
         return h
 
     def __forward(self, x, train=True):
         h = self.l0(x)
         h = self.l1(F.dropout(F.relu(h), train=train))
-        #h = self.l2(F.dropout(h, train=train))
+        h = self.l2(F.dropout(F.relu(h), train=train))
         h = self.l3(F.dropout(F.relu(h), train=train))
         return h
 
@@ -74,7 +74,7 @@ class LSTM(chainer.Chain):
 
     def reset_state(self):
         self.l1.reset_state()
-        #self.l2.reset_state()
+        self.l2.reset_state()
 
     def predict(self, x_data, gpu=-1, train=False):
 

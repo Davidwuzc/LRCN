@@ -12,6 +12,7 @@ import chainer
 from chainer import cuda
 import chainer.functions as F
 from CNN_2 import CNN
+from LSTM import LRCN_Hybrid
 
 
 from chainer.functions import caffe
@@ -23,11 +24,11 @@ pickle.dump(alex, open('alex','wb'))
 
 print 'Converting caffe model to chainer model was completed!'
 
-cnn = CNN(data= np.zeros(5),
+lrcn = LRCN_Hybrid(data= np.zeros(5),
           target=np.zeros(5),
-          gpu=-1,
-          n_outputs=0)
+          gpu=0,
+          n_outputs=5)
 
 #cnn.train_and_test(n_epoch=20,batchsize=100)
 
-cnn.dump_model('_chainer_fc6')
+lrcn.dump_model('_hybrid')

@@ -16,6 +16,7 @@ class CNN:
         self.model = alex.Alex(n_outputs)
         self.model_name = 'alex_chainer_fc6'
         self.feature_dataset = 'feature_dataset'
+        self.rearrange_dataset = 'rearrange_dataset'
 
         if gpu >= 0:
             self.model.to_gpu()
@@ -43,7 +44,7 @@ class CNN:
             print len(self.x_feature)
             #　全部やるのは時間的に面倒なので、５つだけでやる
             #Motions = len(self.x_feature)
-            Motions = 2
+            Motions = 5
             #featureImage = [[] for y in range(len(self.x_feature))]
             featureImage = [[] for y in range(Motions)]
             payload = [[]]
@@ -64,6 +65,38 @@ class CNN:
 
             pickle.dump(featureImage, open(self.feature_dataset, 'wb'), -1)
             return featureImage
+
+    def rearrange(self,motions):
+        if os.path.exists(self.rearrange_dataset):
+            print 'os.path.exists'
+            rearrangeImage = pickle.load(open(self.rearrange_dataset,'rb'))
+            return rearrangeImage
+        else:
+
+            print len(self.x_feature)
+            #　全部やるのは時間的に面倒なので、５つだけでやる
+            #Motions = len(self.x_feature)
+            Motions = motions
+            #featureImage = [[] for y in range(len(self.x_feature))]
+            rearrangeImage = [[] for y in range(Motions)]
+            payload = [[]]
+            for i, motion in enumerate(self.x_feature):
+                print 'motion NO.',i
+                #if i >= len(self.x_feature):
+                if i >= Motions:
+                    print 'skip this motion'
+                    continue
+                for j, image in enumerate(motion):
+                    if len(image)==0:
+                        print 'skip'
+                        continue
+                    print 'payloading...'
+                    image = np.array(image, np.float32)
+
+                    rearrangeImage[i].append(image)
+
+            pickle.dump(rearrangeImage, open(self.rearrange_dataset, 'wb'), -1)
+            return rearrangeImage
 
     def train_and_test(self, n_epoch=20, batchsize=100):
 

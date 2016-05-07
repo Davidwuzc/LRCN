@@ -7,13 +7,13 @@ import cv2 as cv
 
 class AnimeFaceDataset:
     def __init__(self):
-        self.data_dir_path = u"./images/mp4/UCF-101/"
+        self.data_dir_path = u"./images_int4/mp4/UCF-101/"
         #self.data_dir_path = u"./images_org/"
 
         self.data = None
         self.target = None
         self.n_types_target = -1
-        self.dump_name = u'dataset'
+        self.dump_name = u'dataset_int4'
         self.image_size = 224
         self.index2name = []
 

@@ -22,16 +22,16 @@ import numpy as np
 n_epoch = 10000
 gpu = 0
 # データセットを作る
-#dataset = AnimeFaceDataset()
-#dataset.load_data_target()
-#data = dataset.data
-#data = np.asarray(data)
+dataset = AnimeFaceDataset()
+dataset.load_data_target()
+data = dataset.data
+data = np.asarray(data)
 
-#target = dataset.target
-#n_outputs = dataset.get_n_types_target()
+target = dataset.target
+n_outputs = dataset.get_n_types_target()
 n_outputs = 2
 # CNNによって特徴量を取り出したデータセットを作る
-cnn = CNN(data=[], target=[], gpu=0, n_outputs=n_outputs)
+cnn = CNN(data=data, target=target, gpu=0, n_outputs=n_outputs)
 cnn.load_model()
 feature = cnn.feature()
 dim = len(feature)
@@ -111,10 +111,11 @@ for seq in range(n_epoch):
 		optimizer.update()
 
 		sum_train_loss += float(cuda.to_cpu(loss.data))
+		sum_train_accuracy += float(cuda.to_cpu(model.accuracy.data))
         #sum_train_accuracy += float(cuda.to_cpu(acc.data))
 	print '=================================='
 	print 'epoch:  ',epoch
-	print 'train mean loss=',format(sum_train_loss/len(sequence))
+	print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence)), format(sum_train_accuracy/len(sequence))
 	print '==================================='
 	
 	if epoch % 5 == 0:
@@ -129,7 +130,7 @@ for seq in range(n_epoch):
 		if randomMotion == np.argmax(payload):
 			win += 1
 		print 'Answer:', randomMotion, ' Pred:', np.argmax(payload), ',',np.max(payload)*100,'%'
-		print 'softmax', payload
+		print 'Distribution', payload
 		print 'Total winning ratio: ', win,'/',epoch/5
 		print '=================================='
 	epoch += 1

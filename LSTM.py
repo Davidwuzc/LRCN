@@ -29,9 +29,8 @@ class Alex(chainer.Chain):
             conv5=L.Convolution2D(384, 256,  3, pad=1),
             fc6=L.Linear(9216, 4096),
             fc7=L.Linear(4096,n_units),
-            l8=L.LSTM(n_units, n_units),
-            l9=L.LSTM(n_units, n_units),
-            fc10=L.Linear(n_units,n_outputs)
+            #l8=L.LSTM(n_units, n_units),
+            fc9=L.Linear(n_units,n_outputs)
         )
         self.train = True
 
@@ -45,9 +44,8 @@ class Alex(chainer.Chain):
         h = F.max_pooling_2d(F.relu(self.conv5(h)), 3, stride=2)
         h = F.relu(self.fc6(h))
         h = F.relu(self.fc7(h))
-        h = F.relu(self.l8(h))
-        h = F.relu(self.l9(h))
-        h = F.relu(self.fc10(h))
+        #h = F.relu(self.l8(h))
+        h = F.relu(self.fc9(h))
         return h
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
@@ -61,8 +59,8 @@ class Alex(chainer.Chain):
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
     def reset_state(self):
-        self.l8.reset_state()
-        self.l9.reset_state()
+        print 'reset_state'
+        #self.l8.reset_state()
 
     def predict(self, x_data, gpu=-1, train=False):
         if gpu >= 0:
@@ -74,11 +72,11 @@ class Alex(chainer.Chain):
         return F.softmax(y).data
 
 class LRCN_Hybrid:
-    def __init__(self, data, target, n_outputs, length=4096, gpu=-1):
+    def __init__(self, data, target, n_outputs=5, length=4096, gpu=-1):
 
         self.model = Alex(length, n_outputs)
-        self.model_name = 'LSTM_Model_hybrid'
-        self.dump_name = 'LSTM_Model'
+        self.model_name = 'LSTM_Model_2_mod_hybrid'
+        self.dump_name = 'LSTM_Model_2_finish'
 
         if gpu >= 0:
             self.model.to_gpu()
@@ -104,12 +102,16 @@ class LRCN_Hybrid:
             #self.model.reset_state()
             sum_train_accuracy = 0
             sum_train_loss = 0
-            randomMotion = randint(self.dim)
-            sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
-            
+
+            randomMotion1 = randint(len(self.x_feature))
+            randomMotion2 = randint(len(self.x_feature[randomMotion1]))
+            randomMotion3 = randint(len(self.x_feature[randomMotion1][randomMotion2]))
+
+            sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
             for i, image in enumerate(sequence):
-                x = image[np.newaxis, :]
-                t = np.asarray([randomMotion], dtype=np.int32)
+
+                x = np.asarray(image[np.newaxis, :], dtype=np.float32)
+                t = np.asarray([randomMotion1], dtype=np.int32)
                 #print 'x:',x
                 #print 't: ', t
 
@@ -127,14 +129,16 @@ class LRCN_Hybrid:
                 print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
 
             # evaluation
-                self.model.reset_state()
+                #self.model.reset_state()
                 sum_test_accuracy = 0
                 sum_test_loss = 0
-                randomMotion = randint(self.dim)
-                sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
+                randomMotion1 = randint(len(self.x_feature))
+                randomMotion2 = randint(len(self.x_feature[randomMotion1]))
+                randomMotion3 = randint(len(self.x_feature[randomMotion1][randomMotion2]))
+                sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
+           
                 for i, image in enumerate(sequence):
-
-                    x = image[np.newaxis, :]
+                    x = np.asarry(image[np.newaxis, :], dtype=np.float32)
                     t = np.asarray([randomMotion], dtype=np.int32)
                     loss, acc = self.model.forward(x, t, gpu=self.gpu, train=True)
                     sum_test_loss += float(cuda.to_cpu(loss.data))
@@ -143,13 +147,16 @@ class LRCN_Hybrid:
             
             # prediction
             if epoch%10 ==0:
-                self.model.reset_state()
-                randomMotion = randint(self.dim)
-                sequence = self.x_feature[randomMotion][randint(len(self.x_feature[randomMotion]))]
+                #self.model.reset_state()
+                randomMotion1 = randint(len(self.x_feature))
+                randomMotion2 = randint(len(self.x_feature[randomMotion1]))
+                randomMotion3 = randint(len(self.x_feature[randomMotion1][randomMotion2]))
+                sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
+
                 #prob = np.asarray([[0. for y in range(self.dim)]])
                 payload = np.zeros(self.dim)
                 for i, image in enumerate(sequence):
-                    x = image[np.newaxis, :]
+                    x = np.asarray(image[np.newaxis, :], dtype=np.float32)
                     result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu, train=True))
                     #prob = prob[0] + result[0]/len(sequence)
 

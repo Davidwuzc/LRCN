@@ -10,9 +10,9 @@ from sklearn.datasets import fetch_mldata
 from sklearn.cross_validation import train_test_split
 from chainer import cuda, Variable, FunctionSet, optimizers
 import chainer.functions as F
-import alex
+#import alex
 from numpy.random import *
-
+from visualizer import *
 
 class Alex(chainer.Chain):
 
@@ -45,15 +45,15 @@ class Alex(chainer.Chain):
         h = F.relu(self.fc6(h))
         h = F.relu(self.fc7(h))
         #h = F.relu(self.l8(h))
-        h = F.relu(self.fc9(h))
+        h = self.fc9(h)
         return h
 
     def forward(self, x_data, y_data, train=True, gpu=-1):
+
         if gpu >= 0:
             x_data = cuda.to_gpu(x_data)
             y_data = cuda.to_gpu(y_data)
         x, t = Variable(x_data), Variable(y_data)
-
         y = self.__forward(x, train=train)
 
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
@@ -75,8 +75,8 @@ class LRCN_Hybrid:
     def __init__(self, data, target, n_outputs=5, length=4096, gpu=-1):
 
         self.model = Alex(length, n_outputs)
-        self.model_name = 'LSTM_Model_2_mod_hybrid'
-        self.dump_name = 'LSTM_Model_2_finish'
+        self.model_name = 'LSTM_Model_hybrid2_copied'
+        self.dump_name = 'LSTM_Model_hybrid2_copied_'
 
         if gpu >= 0:
             self.model.to_gpu()
@@ -89,7 +89,7 @@ class LRCN_Hybrid:
         self.x_feature = data
         self.y_feature = target
 
-        self.optimizer = optimizers.Adam()
+        self.optimizer = optimizers.RMSpropGraves()
         self.optimizer.setup(self.model)
 
     def predict(self):
@@ -109,7 +109,6 @@ class LRCN_Hybrid:
 
             sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
             for i, image in enumerate(sequence):
-
                 x = np.asarray(image[np.newaxis, :], dtype=np.float32)
                 t = np.asarray([randomMotion1], dtype=np.int32)
                 #print 'x:',x
@@ -138,15 +137,15 @@ class LRCN_Hybrid:
                 sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
            
                 for i, image in enumerate(sequence):
-                    x = np.asarry(image[np.newaxis, :], dtype=np.float32)
-                    t = np.asarray([randomMotion], dtype=np.int32)
+                    x = np.asarray(image[np.newaxis, :], dtype=np.float32)
+                    t = np.asarray([randomMotion1], dtype=np.int32)
                     loss, acc = self.model.forward(x, t, gpu=self.gpu, train=True)
                     sum_test_loss += float(cuda.to_cpu(loss.data))
                     sum_test_accuracy += float(cuda.to_cpu(acc.data))
                 print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(sequence), sum_test_accuracy/len(sequence))
             
             # prediction
-            if epoch%10 ==0:
+            if epoch%20 ==0:
                 #self.model.reset_state()
                 randomMotion1 = randint(len(self.x_feature))
                 randomMotion2 = randint(len(self.x_feature[randomMotion1]))
@@ -157,15 +156,15 @@ class LRCN_Hybrid:
                 payload = np.zeros(self.dim)
                 for i, image in enumerate(sequence):
                     x = np.asarray(image[np.newaxis, :], dtype=np.float32)
-                    result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu, train=True))
+                    result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu, train=False))
                     #prob = prob[0] + result[0]/len(sequence)
 
                     payload += result[0]/len(sequence)
-                if randomMotion == np.argmax(payload):
+                if randomMotion1 == np.argmax(payload):
                     win += 1
-                print 'Answer:', randomMotion, ' Pred:', np.argmax(payload), ',',np.max(payload)*100,'%'
+                print 'Answer:', randomMotion1, ' Pred:', np.argmax(payload), ',',np.max(payload)*100,'%'
                 print 'softmax', payload
-                print 'Total winning ratio: ', win,'/',epoch/100
+                print 'Total winning ratio: ', win,'/',epoch/20
                 print '=================================='
 
             epoch += 1

@@ -20,7 +20,7 @@ class Alex(chainer.Chain):
 
     insize = 227
 
-    def __init__(self, length, n_outputs, n_units=256, train=True):
+    def __init__(self, length, n_outputs, n_units=1024, train=True):
         super(Alex, self).__init__(
             conv1=L.Convolution2D(3,  96, 11, stride=4),
             conv2=L.Convolution2D(96, 256,  5, pad=2),
@@ -55,7 +55,6 @@ class Alex(chainer.Chain):
             y_data = cuda.to_gpu(y_data)
         x, t = Variable(x_data), Variable(y_data)
         y = self.__forward(x, train=train)
-
         return F.softmax_cross_entropy(y, t), F.accuracy(y, t)
 
     def reset_state(self):
@@ -106,28 +105,47 @@ class LRCN_Hybrid:
             randomMotion1 = randint(len(self.x_feature))
             randomMotion2 = randint(len(self.x_feature[randomMotion1]))
             randomMotion3 = randint(len(self.x_feature[randomMotion1][randomMotion2]))
-
             sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
-            for i, image in enumerate(sequence):
-                x = np.asarray(image[np.newaxis, :], dtype=np.float32)
-                t = np.asarray([randomMotion1], dtype=np.int32)
-                #print 'x:',x
-                #print 't: ', t
+            x = []
+            t = []
+            for i in range(100):
 
-                self.optimizer.zero_grads()
-                loss, acc = self.model.forward(x, t, gpu=self.gpu)
-                loss.backward()
-                self.optimizer.update()
+            #for i, image in enumerate(sequence):
+                #if i >=1:
+                #    continue
 
-                sum_train_loss += float(cuda.to_cpu(loss.data))
-                sum_train_accuracy += float(cuda.to_cpu(acc.data))
+                randomMotion1 = randint(len(self.x_feature))
+                randomMotion2 = randint(len(self.x_feature[randomMotion1]))
+                randomMotion3 = randint(len(self.x_feature[randomMotion1][randomMotion2]))
+                randomMotion4 = randint(len(self.x_feature[randomMotion1][randomMotion2][randomMotion3]))
+                sequence = self.x_feature[randomMotion1][randomMotion2][randomMotion3]
+
+                x.append(sequence[randomMotion4])
+                t.append(randomMotion1)
+
+
+                #x = np.asarray(image[np.newaxis, :], dtype=np.float32)
+                #t = np.asarray([randomMotion1], dtype=np.int32)
+            x = np.asarray(x, dtype=np.float32)
+            t = np.asarray(t, dtype=np.int32)
+
+            self.optimizer.zero_grads()
+            loss, acc = self.model.forward(x, t, gpu=self.gpu)
+            loss.backward()
+            self.optimizer.update()
+            print '=================='
+            print epoch
+            print loss.data
+
+            sum_train_loss += float(cuda.to_cpu(loss.data))
+            sum_train_accuracy += float(cuda.to_cpu(acc.data))
             
-            if epoch%20 == 0:
+            if epoch%2000 == 0:
                 print '=================================='
                 print 'epoch:  ',epoch
                 print 'train mean loss={}, accuracy={}'.format(sum_train_loss/len(sequence), sum_train_accuracy/len(sequence))
 
-            # evaluation
+                # evaluation
                 #self.model.reset_state()
                 sum_test_accuracy = 0
                 sum_test_loss = 0
@@ -140,12 +158,13 @@ class LRCN_Hybrid:
                     x = np.asarray(image[np.newaxis, :], dtype=np.float32)
                     t = np.asarray([randomMotion1], dtype=np.int32)
                     loss, acc = self.model.forward(x, t, gpu=self.gpu, train=True)
+
                     sum_test_loss += float(cuda.to_cpu(loss.data))
                     sum_test_accuracy += float(cuda.to_cpu(acc.data))
                 print 'test mean loss={}, accuracy={}'.format(sum_test_loss/len(sequence), sum_test_accuracy/len(sequence))
             
             # prediction
-            if epoch%20 ==0:
+            if epoch%2000 ==0:
                 #self.model.reset_state()
                 randomMotion1 = randint(len(self.x_feature))
                 randomMotion2 = randint(len(self.x_feature[randomMotion1]))
@@ -157,7 +176,6 @@ class LRCN_Hybrid:
                 for i, image in enumerate(sequence):
                     x = np.asarray(image[np.newaxis, :], dtype=np.float32)
                     result = cuda.to_cpu(self.model.predict(x, gpu=self.gpu, train=False))
-                    #prob = prob[0] + result[0]/len(sequence)
 
                     payload += result[0]/len(sequence)
                 if randomMotion1 == np.argmax(payload):
@@ -271,7 +289,7 @@ class LRCN:
                 t = np.asarray([randomMotion], dtype=np.int32)
                 
                 loss, acc = self.model.forward(x, t, gpu=self.gpu)
-
+                print acc.data
                 self.optimizer.zero_grads()
                 loss.backward()
                 self.optimizer.update()

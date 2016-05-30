@@ -1,22 +1,18 @@
 # LRCN
  Long-term Recurrent Convolutional Networks (LRCN)
- [論文](http://arxiv.org/pdf/1411.4389.pdf)
+ [Paper](http://arxiv.org/pdf/1411.4389.pdf)
 
-## データセット準備
 
-1. データセットはここからダウンロードしてください (http://crcv.ucf.edu/data/UCF101.php)。
-2. LRCNのディレクトリーに内に解凍する。
-3. 使ってるPCでファイルが開けなかったり、OpenCVでビデオをCaptureできない場合は、```./converter.sh```でファイルをいい感じに変換してください。
-4. LRCNのディレクトリー内に「images」フォルダを作成し、```python movie2image.py```を実行すると各ムービーから、時間間隔として均等に10フレーム取り出した画像を各動作の各動画毎のフォルダに保存する（半日以上かかります）。
+## Dataset
+1. Please download Movie Dataset from http://crcv.ucf.edu/data/UCF101.php
+2. Unzip the file in LRCN directory
+3. If you cannot open the video data in your PC, please try ```./converter.sh``` to convert file.
+4. Make 'images_seq' directory and try ```python movie2image_seq.py``` to make dataset, which convert each movie to sequencial 16 frame images and save them in folders.
 
-## CNNモデルの準備
+## Preparation of Model
+1. Please download AlexNet Caffe model from https://github.com/BVLC/caffe/tree/master/models/bvlc_alexnet
+2. Please try ```python caffe2chainer_single.py``` and ```python caffe2chainer_hybrid.py``` to generate the hybrid AlexNet chainer models (We use tuned alexnet model before LSTM.).
 
-1. 今回はCaffeのAlexNetのモデルをベースとしたCNNにより画像の特徴を抽出する。そのため、まずCaffeのBVLCAlexNetモデルをダウンロードしてください(https://github.com/BVLC/caffe/tree/master/models/bvlc_alexnet)。
-2. ```python caffe2chainer.py```によって、今回のネットワーク（AlexNetの最後のLinear部分を一部省略したもの）にあったモデルとして改めて保存。
-
-## LRCNの動かし方
-```python lrcn.py```
-
-## 備考
-まだまともに学習させてないのと、構造的にそもそも正しいのか現在検証中。
-コードも他人に見せるようにまだ書いてないので、もう少し落ち着いてから見てもらえればと思ってます。（4/26）
+## Run
+```python lrcn_single.py``` -> Only CNN
+```python lrcn_hybrid.py``` -> LRCN(CNN + LSTM) 

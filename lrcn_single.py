@@ -22,7 +22,6 @@ import numpy as np
 
 motions = 5
 
-
 dataset = AnimeFaceDataset_Seq()
 dataset.load_data_target()
 data = dataset.data
@@ -34,6 +33,6 @@ lrcn = LRCN_single(data, target, n_outputs=n_outputs, gpu=0)
 print 'load model...'
 #lrcn.load_model()
 print 'train and test...'
-lrcn.train_and_test(n_epoch=100, batch=50)
-lrcn.dump_model('_after')
+lrcn.train_and_test(n_epoch=1000, batch=50)
+lrcn.dump_model('Tuned')
 

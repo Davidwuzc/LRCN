@@ -17,7 +17,7 @@ import chainer.links as L
 from chainer import cuda, Variable, FunctionSet, optimizers
 from numpy.random import *
 import six
-from LSTM import LRCN_Hybrid
+from LRCN import LRCN_Hybrid
 import numpy as np
 
 motions = 5
@@ -32,8 +32,8 @@ n_outputs = dataset.get_n_types_target()
 # モデルの準備
 lrcn = LRCN_Hybrid(data, target, n_outputs=n_outputs, gpu=0)
 print 'load model...'
-lrcn.load_model()
+#lrcn.load_model()
 print 'train and test...'
-lrcn.train_and_test(n_epoch=10000000)
+lrcn.train_and_test(n_epoch=100, batch=50)
 lrcn.dump_model('_after')
 

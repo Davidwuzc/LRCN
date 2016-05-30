@@ -5,15 +5,16 @@ import six.moves.cPickle as pickle
 import numpy as np
 import cv2 as cv
 
-class AnimeFaceDataset:
+
+class AnimeFaceDataset_Seq:
     def __init__(self):
-        self.data_dir_path = u"./images_int4/mp4/UCF-101/"
+        self.data_dir_path = u"../lrcn/images_seq/mp4/UCF-101/"
         #self.data_dir_path = u"./images_org/"
 
         self.data = None
         self.target = None
         self.n_types_target = -1
-        self.dump_name = u'dataset_int4'
+        self.dump_name = u'dataset_seq'
         self.image_size = 224
         self.index2name = []
 
@@ -50,8 +51,11 @@ class AnimeFaceDataset:
             ret = {}
             self.target = []
             target_name = []
-            self.data = [[] for y in range(len(dir_list))]
+            ##self.data = [[] for y in range(len(dir_list))]
+            self.data = [[] for y in range(5)]
             for i, dir_name in enumerate(dir_list):
+                if i >=5:
+                    continue
                 dir_list2 = os.listdir(self.data_dir_path+dir_name)
                 print 'dir_name', dir_name
                 print 'dir_list2', dir_list2
@@ -59,21 +63,44 @@ class AnimeFaceDataset:
                 for j, dir_name2 in enumerate(dir_list2):
                     if dir_name2 == '.DS_Store':
                         continue
-
+                    if j >= 30:
+                        print 'more than 30 j'
+                        continue
                     file_list = os.listdir(self.data_dir_path+dir_name+'/'+dir_name2)
                     self.data[i].append([])
-                    for file_name in file_list:
-                        root, ext = os.path.splitext(file_name)
-                        if ext == u'.jpg':
-                            abs_name = self.data_dir_path+dir_name+'/'+dir_name2+'/'+file_name
-                            self.target.append(i)
-                            target_name.append(str(dir_name))
-                            image = cv.imread(abs_name)
-                            image = cv.resize(image, (self.image_size, self.image_size))
-                            image = image.transpose(2,0,1)
-                            #image = image/255.
+                    for k, file_name in enumerate(file_list):
+                        if k >= 3:
+                            continue
 
-                            self.data[i][j].append(image)
+                        self.data[i][j].append([])
+                        file_list_seq = os.listdir(self.data_dir_path+dir_name+'/'+dir_name2+'/'+file_name)
+
+                        payload = []
+                        file_list_seq2 = []
+                        for word in file_list_seq:
+                            word = word.replace('frame','')
+                            word = word.replace('.jpg','')
+                            payload.append(int(word))
+                        payload = sorted(payload)
+                        for l, word in enumerate(payload):
+                            file_list_seq2.append('frame'+str(payload[l])+'.jpg')
+
+                        for file_seq in file_list_seq2:
+                            root, ext = os.path.splitext(file_seq)
+
+                            if ext == u'.jpg':
+                                abs_name = self.data_dir_path+dir_name+'/'+dir_name2+'/'+file_name+'/'+file_seq
+                                print 'i, j,k', i,':',j,':',k
+
+                                self.target.append(i)
+                                target_name.append(str(dir_name))
+                                image = cv.imread(abs_name)
+                                image = cv.resize(image, (self.image_size, self.image_size))
+                                image = image.transpose(2,0,1)
+                                image = image/255.
+                                self.data[i][j][k].append(image)
+
+                                print len(self.data)
 
         #self.data = np.array(self.data, np.float32)
         self.target = np.array(self.target, np.int32)
